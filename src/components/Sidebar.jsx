@@ -41,13 +41,7 @@ export default function Sidebar({ active, onSelect, counts, open, onClose }) {
           </Link>
         </div>
 
-        <div className="side-foot">
-          <p className="guest-tag">👤 Admin</p>
-          <Link to="/login" className="btn btn-solid block">
-            Log in
-          </Link>
-          
-        </div>
+        
 
         
 
