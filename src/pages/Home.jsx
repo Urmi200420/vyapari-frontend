@@ -57,6 +57,7 @@ export default function Home() {
             placeholder="Search products, brands and more"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            style={{ color: "#0F2A1D" }}
           />
           <nav className="top-links">
             <Link to="/login?mode=signup">Sell on Vyapari</Link>

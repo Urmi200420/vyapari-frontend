@@ -22,7 +22,7 @@
 
 :root[data-theme="forest"] {
   --bg: #6b9071; /* page behind the tiles (palette: darkest) */
-  --panel: #254632; /* main tiles */
+  --panel: #0F2A1D; /* main tiles */
   --panel-2: #375534; /* inner tiles / inputs (palette: 2nd) */
   --panel-3: #4a6d4f; /* hover */
   --cream: #e3eed4; /* text + primary buttons (palette: lightest) */
@@ -1023,4 +1023,7 @@ a {
   .card .phone {
     height: 150px;
   }
+}
+.search::placeholder {
+  color: #86b9a0;
 }
