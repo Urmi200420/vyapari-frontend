@@ -60,7 +60,9 @@ export default function Home() {
             style={{ color: "#0F2A1D" }}
           />
           <nav className="top-links">
-            <Link to="/login?mode=signup">Sell on Vyapari</Link>
+            
+            <Link to="/seller">Sell on Vyapari</Link>
+            
             <Link to="/login" className="btn btn-solid">
               Log in
             </Link>
@@ -83,7 +85,7 @@ export default function Home() {
               <button className="btn btn-solid" onClick={jumpToShop}>
                 Start browsing
               </button>
-              <Link to="/login?mode=signup" className="btn btn-ghost">
+              <Link to="/seller" className="btn btn-ghost">
                 Become a seller
               </Link>
             </div>

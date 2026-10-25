@@ -1027,3 +1027,37 @@ a {
 .search::placeholder {
   color: #86b9a0;
 }
+/* Universal iOS Glass Button Style for all pages */
+button, .ios-glass-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.15);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.12),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s ease;
+}
+
+button:hover, .ios-glass-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.45);
+  transform: translateY(-2px) scale(1.02);
+}
+
+button:active, .ios-glass-btn:active {
+  transform: scale(0.95);
+}
