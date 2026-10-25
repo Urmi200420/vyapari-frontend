@@ -3,6 +3,9 @@ import { Routes, Route } from "react-router-dom";
 import Intro from "./components/Intro.jsx";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
+import "./CategoryCards.css";
+import "./liquid-glass/glass.css";
+import LiquidGlassTest from "./liquid-glass/LiquidGlassTest.jsx";
 
 export default function App() {
   // Intro plays once per browser session

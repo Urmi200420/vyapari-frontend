@@ -1,0 +1,11 @@
+.category-card {
+  position: relative;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+  cursor: pointer;
+}
+
+.category-card.active {
+  transform: translateY(-25px) scale(1.08);
+  z-index: 999;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+}
