@@ -1,18 +1,31 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar.jsx";
+import GlassButton from "../components/GlassButton.jsx";
 import ProductCard from "../components/ProductCard.jsx";
 import { categories, products } from "../data.js";
+import { scrollToElement } from "../smoothScroll.js";
 
 // If an image file is missing, hide the broken icon and show the label instead
 const hideBroken = (e) => {
   e.currentTarget.style.display = "none";
 };
 
+// "Shop by vibe" cards: picture in public/vibes/, and which category it opens
+const vibes = [
+  { img: "/vibes/groceries.jpg", label: "Restock your pantry", cat: "veggies" },
+  { img: "/vibes/fashion.jpg", label: "build our style!", cat: "clothing" },
+  { img: "/vibes/books.jpg", label: "Wanna read books?", cat: "books" },
+  { img: "/vibes/gadgets.jpg", label: "check out cool tech", cat: "electronics" },
+  { img: "/vibes/beauty.jpg", label: "skincare?", cat: "beauty" }
+];
+
+
 export default function Home() {
   const [active, setActive] = useState("all");
   const [query, setQuery] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false); // phone: sidebar sheet open
+  const [collapsed, setCollapsed] = useState(false); // desktop: sidebar hidden with the ✕
 
   const counts = useMemo(() => {
     const c = { all: products.length };
@@ -23,32 +36,51 @@ export default function Home() {
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return products.filter(
-      (p) =>
-        (active === "all" || p.category === active) &&
-        (!q || p.name.toLowerCase().includes(q))
+      (p) => (active === "all" || p.category === active) && (!q || p.name.toLowerCase().includes(q))
     );
   }, [active, query]);
 
   const activeLabel = categories.find((c) => c.id === active)?.label;
   const circleCats = categories.filter((c) => c.id !== "all");
 
-  const jumpToShop = () =>
-    document.getElementById("shop")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // "Shop by vibe" row: the arrows glide it sideways
+  const vibeRef = useRef(null);
+  const slideVibes = (dir) => {
+    const row = vibeRef.current;
+    if (row) row.scrollBy({ left: dir * row.clientWidth * 0.8, behavior: "smooth" });
+  };
+
+  const jumpToShop = () => scrollToElement(document.getElementById("shop"));
+  const pickCategory = (id) => {
+    setActive(id);
+    jumpToShop();
+  };
+
+  // ✕ button: closes the sheet on phones, hides the sidebar on desktop
+  const pressCross = () => {
+    setMenuOpen(false);
+    if (window.innerWidth > 860) setCollapsed(true);
+  };
+  const openMenu = () => {
+    setMenuOpen(true);
+    setCollapsed(false);
+  };
 
   return (
-    <div className="shell">
+    <div className={"shell" + (collapsed ? " collapsed" : "")}>
       <Sidebar
         active={active}
-        onSelect={setActive}
+        onSelect={pickCategory}
         counts={counts}
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
+        onCross={pressCross}
       />
 
       <main className="main">
-        {/* top bar tile */}
-        <header className="topbar panel">
-          <button className="menu-btn" onClick={() => setMenuOpen(true)} aria-label="Open menu">
+        {/* floating glass top bar */}
+        <header className="topbar glass-panel">
+          <button className="menu-btn glass" onClick={openMenu} aria-label="Open menu">
             ☰
           </button>
           <input
@@ -57,15 +89,14 @@ export default function Home() {
             placeholder="Search products, brands and more"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            style={{ color: "#0F2A1D" }}
           />
           <nav className="top-links">
-            
-            <Link to="/seller">Sell on Vyapari</Link>
-            
-            <Link to="/login" className="btn btn-solid">
-              Log in
+            <Link to="/seller" className="text-link">
+              Sell on Vyapari
             </Link>
+            <GlassButton to="/login" variant="solid">
+              Log in
+            </GlassButton>
           </nav>
         </header>
 
@@ -78,16 +109,14 @@ export default function Home() {
               <strong>Vyapari</strong>
             </h1>
             <p className="hero-sub">
-              Fresh produce, electronics, fashion and more from sellers you can trust. Look around
-              freely and log in when you are ready.
+              Fresh produce, electronics, fashion and more from sellers you can trust. Look around freely and log in
+              when you are ready.
             </p>
             <div className="hero-actions">
-              <button className="btn btn-solid" onClick={jumpToShop}>
+              <GlassButton variant="solid" onClick={jumpToShop}>
                 Start browsing
-              </button>
-              <Link to="/seller" className="btn btn-ghost">
-                Become a seller
-              </Link>
+              </GlassButton>
+              <GlassButton to="/seller">Become a seller</GlassButton>
             </div>
             <div className="hero-stats">
               <div>
@@ -128,6 +157,29 @@ export default function Home() {
           </div>
         </section>
 
+        {/* shop by vibe tile */}
+        <section className="vibes panel">
+          <div className="vibes-head">
+            <p className="eyebrow">Shop by vibe</p>
+            <div className="vibe-arrows">
+              <GlassButton className="arrow" onClick={() => slideVibes(-1)} aria-label="Scroll left">
+                ←
+              </GlassButton>
+              <GlassButton className="arrow" onClick={() => slideVibes(1)} aria-label="Scroll right">
+                →
+              </GlassButton>
+            </div>
+          </div>
+          <div className="vibe-row" ref={vibeRef}>
+            {vibes.map((v) => (
+              <button key={v.label} className="vibe" onClick={() => pickCategory(v.cat)}>
+                <img src={v.img} alt="" loading="lazy" onError={hideBroken} />
+                <span className="vibe-tag glass">{v.label}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
         {/* category circles tile */}
         <section className="circles panel">
           <p className="eyebrow">Browse by category</p>
@@ -136,12 +188,9 @@ export default function Home() {
               <button
                 key={c.id}
                 className={"circle" + (active === c.id ? " on" : "")}
-                onClick={() => {
-                  setActive(c.id);
-                  jumpToShop();
-                }}
+                onClick={() => pickCategory(c.id)}
               >
-                <span className="circle-icon">{c.icon}</span>
+                <span className="circle-icon glass">{c.icon}</span>
                 <span className="circle-name">{c.label}</span>
               </button>
             ))}

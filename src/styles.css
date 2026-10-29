@@ -1,68 +1,49 @@
 /* =====================================================================
-   Vyapari theme. Pick a palette with <html data-theme="wine"> or "mauve"
-   in index.html, or edit the values below to make your own.
+   Vyapari theme: forest greens + iPhone-style "liquid glass".
+   Change the colours in :root below; everything else follows.
    ===================================================================== */
-:root,
-:root[data-theme="wine"] {
-  --bg: #2c0c18; /* page behind the tiles */
-  --panel: #561c2e; /* main tiles */
-  --panel-2: #692a3c; /* inner tiles / inputs */
-  --panel-3: #7c3a4d; /* hover */
-  --cream: #f3e4d7; /* main text + primary buttons */
-  --blush: #e3bfb2; /* soft highlight */
-  --on-cream: #4a1626; /* text on cream buttons */
-  --muted: #cba5a8;
-  --line: #ffffff1f;
-  --star: #f0b38a;
-  --t1: #ecd1c7; /* tints behind product emoji */
-  --t2: #dfc5c1;
-  --t3: #f1dcc9;
-  --t4: #dbc8cb;
-}
-
-:root[data-theme="forest"] {
-  --bg: #6b9071; /* page behind the tiles (palette: darkest) */
-  --panel: #0F2A1D; /* main tiles */
-  --panel-2: #375534; /* inner tiles / inputs (palette: 2nd) */
+:root {
+  --bg: #6b9071; /* page behind the tiles */
+  --panel: #0f2a1d; /* main tiles */
+  --panel-2: #375534; /* inner tiles / inputs */
   --panel-3: #4a6d4f; /* hover */
-  --cream: #e3eed4; /* text + primary buttons (palette: lightest) */
-  --blush: #aec3b0; /* soft highlight (palette: 4th) */
+  --cream: #e3eed4; /* text + primary buttons */
+  --blush: #aec3b0; /* soft highlight */
   --on-cream: #0f2a1d; /* text on light buttons */
   --muted: #9fb8a3;
   --line: #ffffff1f;
   --star: #c9dfa6;
+  --cream-a45: rgba(227, 238, 212, 0.45);
+  --cream-a80: rgba(227, 238, 212, 0.8);
+  --muted-a70: rgba(159, 184, 163, 0.7);
+  --blush-a35: rgba(174, 195, 176, 0.35);
   --t1: #c8e1a5; /* tints behind images */
   --t2: #aec3b0;
   --t3: #cfe0bf;
   --t4: #b9d0bb;
-}
-
-:root[data-theme="mauve"] {
-  --bg: #231f20;
-  --panel: #5b4d4d;
-  --panel-2: #736466;
-  --panel-3: #887779;
-  --cream: #f2e9e6;
-  --blush: #d9c4c0;
-  --on-cream: #3a2e30;
-  --muted: #d2c0bd;
-  --line: #ffffff22;
-  --star: #f1c9a4;
-  --t1: #e4d6d2;
-  --t2: #d8cccd;
-  --t3: #eee1d5;
-  --t4: #d5d3d6;
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* the bouncy iPhone feel */
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
 }
-body {
-  font-family: "DM Sans", system-ui, sans-serif;
+html {
   background: var(--bg);
+}
+body {
+  min-height: 100vh;
+  font-family: "DM Sans", system-ui, sans-serif;
   color: var(--cream);
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  /* soft colour blobs behind everything, so the glass has something to blur */
+  background:
+    radial-gradient(60vmax 60vmax at 8% 6%, #aec3b0aa, transparent 60%),
+    radial-gradient(55vmax 55vmax at 95% 40%, #375534cc, transparent 60%),
+    radial-gradient(50vmax 50vmax at 30% 100%, #0f2a1d99, transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
 }
 button {
   font: inherit;
@@ -71,6 +52,66 @@ button {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* =====================================================================
+   LIQUID GLASS  (any element with class "glass" or "glass-panel")
+   ===================================================================== */
+.glass {
+  --mx: 50%;
+  --my: 0%;
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(180deg, rgba(227, 238, 212, 0.26), rgba(227, 238, 212, 0.08));
+  -webkit-backdrop-filter: blur(16px) saturate(1.8) brightness(1.06);
+  backdrop-filter: blur(16px) saturate(1.8) brightness(1.06);
+  border: 1px solid rgba(227, 238, 212, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 0 16px rgba(227, 238, 212, 0.12),
+    0 10px 22px -12px rgba(5, 20, 12, 0.7);
+  transition: transform 0.45s var(--spring), box-shadow 0.3s, background 0.3s;
+}
+/* Chrome / Edge: also bend the background a little, like real glass */
+.refract .glass {
+  -webkit-backdrop-filter: url(#glass-refract) blur(12px) saturate(1.8) brightness(1.06);
+  backdrop-filter: url(#glass-refract) blur(12px) saturate(1.8) brightness(1.06);
+}
+/* the shine that follows your finger / mouse */
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(110px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.5), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.glass:hover::before {
+  opacity: 0.85;
+}
+/* bouncy press, like tapping an iPhone button */
+.glass:hover {
+  transform: translateY(-1px) scale(1.03);
+}
+.glass:active {
+  transform: scale(0.93);
+  transition-duration: 0.12s;
+}
+
+/* bigger glass surfaces (sidebar, top bar): darker so text stays readable */
+.glass-panel {
+  background: linear-gradient(180deg, rgba(15, 42, 29, 0.78), rgba(15, 42, 29, 0.6));
+  -webkit-backdrop-filter: blur(26px) saturate(1.7);
+  backdrop-filter: blur(26px) saturate(1.7);
+  border: 1px solid rgba(227, 238, 212, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 0 22px rgba(227, 238, 212, 0.06),
+    0 24px 50px -28px rgba(5, 20, 12, 0.85);
 }
 
 /* ---------- Type: elegant serif + bold condensed caps ---------- */
@@ -111,56 +152,53 @@ a {
   color: var(--cream);
 }
 
+
 /* ---------- Tiles ---------- */
 .panel {
   padding: 1.4rem;
   border-radius: 26px;
   background: var(--panel);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 40px -30px rgba(5, 20, 12, 0.8);
 }
 
-/* ---------- Buttons ---------- */
+/* ---------- Buttons (glass) ---------- */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.7rem 1.4rem;
-  border: 1px solid transparent;
+  gap: 0.4rem;
+  padding: 0.72rem 1.4rem;
   border-radius: 999px;
+  color: var(--cream);
   font-weight: 600;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  transition: background 0.18s, color 0.18s, transform 0.18s, border-color 0.18s;
-}
-.btn:hover {
-  transform: translateY(-1px);
+  white-space: nowrap;
 }
 .btn:disabled {
   opacity: 0.6;
   pointer-events: none;
 }
-.btn-solid {
-  background: var(--cream);
-  color: var(--on-cream);
-}
-.btn-solid:hover {
-  background: var(--blush);
-}
-.btn-ghost {
-  background: transparent;
-  color: var(--cream);
-  border-color: color-mix(in srgb, var(--cream) 45%, transparent);
-}
-.btn-ghost:hover {
-  background: #ffffff14;
-  border-color: var(--cream);
-}
 .btn.block {
   display: flex;
   width: 100%;
 }
+/* light cream glass, for the main action */
+.btn-solid {
+  color: var(--on-cream);
+  background: linear-gradient(180deg, rgba(240, 248, 228, 0.95), rgba(210, 226, 190, 0.82));
+  border-color: rgba(255, 255, 255, 0.6);
+}
+.btn-solid::before {
+  background: radial-gradient(110px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.95), transparent 65%);
+}
+.btn-ghost {
+  background: transparent;
+  box-shadow: none;
+}
 
-/* ---------- Phone frames (like the mockups in the inspo) ---------- */
+/* ---------- Phone frames ---------- */
 .phone {
   position: relative;
   padding: 6px;
@@ -188,6 +226,7 @@ a {
   border-radius: 20px;
   background: var(--t1);
 }
+
 
 /* ---------- Intro (loading) animation ---------- */
 .intro {
@@ -303,11 +342,12 @@ a {
   100% {
     opacity: 1;
     transform: none;
-    filter: drop-shadow(0 0 14px color-mix(in srgb, var(--blush) 35%, transparent));
+    filter: drop-shadow(0 0 14px var(--blush-a35));
   }
 }
 
-/* ---------- Page shell + sidebar tile ---------- */
+
+/* ---------- Page shell + sidebar (glass) ---------- */
 .shell {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -319,12 +359,10 @@ a {
   position: sticky;
   top: 16px;
   height: calc(100vh - 32px);
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   padding: 1.5rem 1rem 1.2rem;
-  border-radius: 26px;
-  background: var(--panel);
+  border-radius: 28px;
 }
 .side-head {
   display: flex;
@@ -332,7 +370,18 @@ a {
   align-items: center;
   padding: 0 0.6rem;
 }
-.close-btn,
+/* the category list scrolls on its own (like a scrolling sheet on iPhone) */
+.side-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding-bottom: 1rem;
+}
+.side-scroll::-webkit-scrollbar {
+  display: none;
+}
 .menu-btn,
 .scrim {
   display: none;
@@ -344,7 +393,7 @@ a {
   font-size: 1.2rem;
 }
 .side-label {
-  margin: 1.6rem 0.6rem 0.7rem;
+  margin: 1.5rem 0.6rem 0.7rem;
   font-size: 0.68rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -359,22 +408,26 @@ a {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.6rem 0.8rem;
+  padding: 0.45rem 0.8rem;
   border: 0;
-  border-radius: 14px;
+  border-radius: 16px;
   background: transparent;
   color: var(--cream);
   text-align: left;
   font-size: 0.92rem;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.2s, color 0.2s, transform 0.4s var(--spring);
 }
 .cat:hover {
-  background: var(--panel-2);
+  background: rgba(227, 238, 212, 0.12);
+}
+.cat:active {
+  transform: scale(0.96);
 }
 .cat.active {
-  background: var(--cream);
+  background: linear-gradient(180deg, rgba(240, 248, 228, 0.95), rgba(210, 226, 190, 0.85));
   color: var(--on-cream);
   font-weight: 600;
+  box-shadow: inset 0 1px 0 #fff9, 0 8px 18px -10px #0008;
 }
 .cat-icon {
   font-size: 1.15rem;
@@ -390,9 +443,20 @@ a {
   color: var(--on-cream);
   opacity: 0.7;
 }
+.staff-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-left: 0.2rem;
+}
+.staff-links .btn {
+  padding: 0.6rem 1.1rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
 .side-foot {
-  margin-top: auto;
-  padding-top: 1.1rem;
+  padding-top: 1rem;
   display: grid;
   gap: 0.6rem;
   border-top: 1px solid var(--line);
@@ -403,7 +467,7 @@ a {
   color: var(--muted);
 }
 
-/* ---------- Main column ---------- */
+/* ---------- Main column + floating top bar ---------- */
 .main {
   min-width: 0;
   display: flex;
@@ -411,10 +475,14 @@ a {
   gap: 16px;
 }
 .topbar {
+  position: sticky;
+  top: 16px;
+  z-index: 20;
   display: flex;
   gap: 1rem;
   align-items: center;
-  padding: 0.8rem 1rem;
+  padding: 0.7rem 0.8rem 0.7rem 1rem;
+  border-radius: 999px;
 }
 .search {
   flex: 1;
@@ -422,23 +490,22 @@ a {
   padding: 0.75rem 1.2rem;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: var(--panel-2);
+  background: rgba(55, 85, 52, 0.55);
   color: var(--cream);
   font: inherit;
   font-size: 0.92rem;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.2s, background 0.2s;
 }
 .search::placeholder {
   color: var(--muted);
 }
 .search:focus {
   border-color: var(--cream);
+  background: rgba(55, 85, 52, 0.8);
 }
 .menu-btn {
-  border: 1px solid var(--line);
   border-radius: 14px;
-  background: var(--panel-2);
   color: var(--cream);
   padding: 0.55rem 0.8rem;
   font-size: 1.1rem;
@@ -448,16 +515,19 @@ a {
   align-items: center;
   gap: 1.4rem;
 }
-.top-links a:not(.btn) {
+.text-link {
   font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--cream);
   white-space: nowrap;
+  transition: color 0.2s;
 }
-.top-links a:not(.btn):hover {
+.text-link:hover {
   color: var(--blush);
+}
+.top-links .btn {
+  padding: 0.62rem 1.3rem;
 }
 
 /* ---------- Hero tile ---------- */
@@ -495,7 +565,7 @@ a {
 }
 .hero-sub {
   max-width: 44ch;
-  color: color-mix(in srgb, var(--cream) 80%, transparent);
+  color: var(--cream-a80);
   line-height: 1.55;
 }
 .hero-actions {
@@ -676,6 +746,85 @@ a {
   }
 }
 
+/* ---------- Shop by vibe tile ---------- */
+.vibes-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.vibe-arrows {
+  display: flex;
+  gap: 0.5rem;
+}
+.btn.arrow {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+/* one row that scrolls sideways: swipe, drag, trackpad or the arrows */
+.vibe-row {
+  display: flex;
+  gap: 0.9rem;
+  overflow-x: auto;
+  padding: 6px 2px 12px;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 2px;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.vibe-row::-webkit-scrollbar {
+  display: none;
+}
+.vibe {
+  position: relative;
+  flex: 0 0 clamp(180px, 23%, 250px);
+  scroll-snap-align: start;
+  aspect-ratio: 3 / 4;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--panel-2);
+  transition: transform 0.5s var(--spring), box-shadow 0.3s;
+}
+.vibe img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.vibe:hover {
+  transform: translateY(-4px) scale(1.015);
+  box-shadow: 0 24px 36px -22px #000c;
+}
+.vibe:hover img {
+  transform: scale(1.06);
+}
+.vibe:active {
+  transform: scale(0.97);
+}
+.vibe-tag {
+  position: absolute;
+  left: 0.7rem;
+  right: 0.7rem;
+  bottom: 0.7rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--cream);
+  background: linear-gradient(180deg, rgba(15, 42, 29, 0.55), rgba(15, 42, 29, 0.35));
+}
+.vibe:hover .vibe-tag {
+  transform: none; /* tag stays put while the card moves */
+}
+
 /* ---------- Category circles tile ---------- */
 .circles .eyebrow {
   margin-bottom: 1rem;
@@ -701,19 +850,18 @@ a {
   place-items: center;
   width: 68px;
   height: 68px;
-  border: 2px solid var(--line);
   border-radius: 50%;
-  background: var(--panel-2);
   font-size: 1.8rem;
-  transition: background 0.18s, border-color 0.18s, transform 0.18s;
 }
 .circle:hover .circle-icon {
-  transform: translateY(-3px);
-  border-color: var(--blush);
+  transform: translateY(-3px) scale(1.06);
+}
+.circle:active .circle-icon {
+  transform: scale(0.9);
 }
 .circle.on .circle-icon {
-  background: var(--t1);
-  border-color: var(--cream);
+  background: linear-gradient(180deg, rgba(240, 248, 228, 0.95), rgba(200, 225, 165, 0.85));
+  border-color: #fff9;
 }
 .circle-name {
   font-size: 0.72rem;
@@ -766,10 +914,10 @@ a {
   border: 1px solid var(--line);
   border-radius: 24px;
   background: var(--panel-2);
-  transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+  transition: transform 0.5s var(--spring), background 0.2s, box-shadow 0.3s;
 }
 .card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-5px);
   background: var(--panel-3);
   box-shadow: 0 20px 34px -20px #000a;
 }
@@ -840,14 +988,10 @@ a {
   background: var(--panel);
   box-shadow: 0 40px 70px -40px #000c;
 }
-.back {
-  font-size: 0.74rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.back:hover {
-  color: var(--cream);
+.btn.back {
+  padding: 0.5rem 1rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
 }
 .auth-title {
   margin-top: 1.2rem;
@@ -934,7 +1078,7 @@ a {
   transition: border-color 0.15s;
 }
 .field input::placeholder {
-  color: color-mix(in srgb, var(--muted) 70%, transparent);
+  color: var(--muted-a70);
 }
 .field input:focus {
   border-color: var(--cream);
@@ -948,6 +1092,34 @@ a {
 .auth-card .btn.block {
   margin-top: 0.4rem;
   padding: 0.85rem 1rem;
+}
+
+
+.staff-switch {
+  margin-top: 1.1rem;
+  font-size: 0.82rem;
+  text-align: center;
+  color: var(--muted);
+}
+.staff-switch a {
+  color: var(--cream);
+  text-decoration: underline;
+}
+.auth-title.staff strong {
+  font-size: clamp(2.6rem, 8vw, 3.4rem);
+}
+
+/* desktop: the ✕ hides the sidebar, the ☰ in the top bar brings it back */
+@media (min-width: 861px) {
+  .shell.collapsed {
+    grid-template-columns: 1fr;
+  }
+  .shell.collapsed .sidebar {
+    display: none;
+  }
+  .shell.collapsed .menu-btn {
+    display: block;
+  }
 }
 
 /* ---------- Tablet / mobile ---------- */
@@ -968,16 +1140,22 @@ a {
   .main {
     gap: 10px;
   }
+  .topbar {
+    top: 10px;
+    padding: 0.5rem 0.6rem;
+    gap: 0.6rem;
+  }
+  /* sidebar becomes a glass sheet that slides in */
   .sidebar {
     position: fixed;
     left: 10px;
     top: 10px;
     bottom: 10px;
     z-index: 60;
-    width: 280px;
+    width: min(300px, calc(100vw - 20px));
     height: auto;
     transform: translateX(-120%);
-    transition: transform 0.25s;
+    transition: transform 0.5s var(--spring);
   }
   .sidebar.open {
     transform: none;
@@ -987,10 +1165,12 @@ a {
     position: fixed;
     inset: 0;
     z-index: 50;
-    background: #00000099;
+    background: #06150d88;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s;
+    transition: opacity 0.35s;
   }
   .scrim.show {
     opacity: 1;
@@ -1000,7 +1180,7 @@ a {
   .close-btn {
     display: block;
   }
-  .top-links a:not(.btn) {
+  .text-link {
     display: none;
   }
   .hero {
@@ -1013,6 +1193,9 @@ a {
     border-radius: 22px;
     padding: 1.1rem;
   }
+  .vibe {
+    flex-basis: 62%;
+  }
   .shop {
     padding: 1.3rem 1rem 1rem;
   }
@@ -1024,40 +1207,12 @@ a {
     height: 150px;
   }
 }
-.search::placeholder {
-  color: #86b9a0;
-}
-/* Universal iOS Glass Button Style for all pages */
-button, .ios-glass-btn {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 24px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.15);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  box-shadow: 
-    0 8px 32px 0 rgba(0, 0, 0, 0.12),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.1);
-  color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  font-weight: 500;
-  font-size: 15px;
-  cursor: pointer;
-  outline: none;
-  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s ease;
-}
 
-button:hover, .ios-glass-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.45);
-  transform: translateY(-2px) scale(1.02);
-}
-
-button:active, .ios-glass-btn:active {
-  transform: scale(0.95);
+@media (prefers-reduced-motion: reduce) {
+  .glass,
+  .vibe,
+  .card,
+  .sidebar {
+    transition-duration: 0.01s;
+  }
 }

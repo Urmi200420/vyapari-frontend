@@ -1,50 +1,61 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { categories } from "../data.js";
+import GlassButton from "./GlassButton.jsx";
 
-export default function Sidebar({ active, onSelect, counts, open, onClose }) {
+export default function Sidebar({ active, onSelect, counts, open, onClose, onCross }) {
+  const navigate = useNavigate();
+  const goTo = (path) => {
+    onClose();
+    navigate(path);
+  };
+
   return (
     <>
       <div className={"scrim" + (open ? " show" : "")} onClick={onClose} />
-      <aside className={"sidebar" + (open ? " open" : "")}>
+      <aside className={"sidebar glass-panel" + (open ? " open" : "")}>
         <div className="side-head">
           <span className="logo">Vyapari</span>
-          <button className="close-btn" onClick={onClose} aria-label="Close menu">
+          <button className="close-btn" onClick={onCross ?? onClose} aria-label="Close menu">
             ✕
           </button>
         </div>
 
-        <p className="side-label">Shop by category</p>
-        <nav className="cat-list">
-          {categories.map((c) => (
-            <button
-              key={c.id}
-              className={"cat" + (active === c.id ? " active" : "")}
-              onClick={() => {
-                onSelect(c.id);
-                onClose();
-              }}
-            >
-              <span className="cat-icon">{c.icon}</span>
-              <span className="cat-name">{c.label}</span>
-              <span className="cat-count">{counts[c.id] ?? 0}</span>
-            </button>
-          ))}
-        </nav>
+        {/* data-lenis-prevent lets this list scroll on its own, separately from the page */}
+        <div className="side-scroll" data-lenis-prevent>
+          <p className="side-label">Shop by category</p>
+          <nav className="cat-list">
+            {categories.map((c) => (
+              <button
+                key={c.id}
+                className={"cat" + (active === c.id ? " active" : "")}
+                onClick={() => {
+                  onSelect(c.id);
+                  onClose();
+                }}
+              >
+                <span className="cat-icon">{c.icon}</span>
+                <span className="cat-name">{c.label}</span>
+                <span className="cat-count">{counts[c.id] ?? 0}</span>
+              </button>
+            ))}
+          </nav>
+
+          <p className="side-label">Staff access</p>
+          <div className="staff-links">
+            <GlassButton onClick={() => goTo("/login?role=admin")}>🛡️ Admin</GlassButton>
+            <GlassButton onClick={() => goTo("/login?role=delivery")}>🛵 Delivery</GlassButton>
+          </div>
+        </div>
 
         <div className="side-foot">
           <p className="guest-tag">👤 Browsing as guest</p>
-          <Link to="/login" className="btn btn-solid block">
+          <GlassButton to="/login" variant="solid" block onClick={onClose}>
             Log in
-          </Link>
-          <Link to="/login?mode=signup" className="btn btn-ghost block">
+          </GlassButton>
+          <GlassButton to="/login?mode=signup" block onClick={onClose}>
             Create account
-          </Link>
+          </GlassButton>
         </div>
-
-        
-
-        
-
       </aside>
     </>
   );
