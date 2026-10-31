@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function SellerLanding() {
+  const navigate = useNavigate();
   const loginRef = useRef(null);
   const registerRef = useRef(null);
 
@@ -23,16 +24,18 @@ export default function SellerLanding() {
     registerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
+  // Direct login bypass straight into the dashboard
   const handleLoginSubmit = (e) => {
     e.preventDefault();
     console.log("Logging in seller:", loginData);
-    alert("Login Successful!");
+    navigate('/seller-dashboard'); 
   };
 
   const handleRegisterSubmit = (e) => {
     e.preventDefault();
     console.log("Submitting store registration:", registerData);
     alert("Store Registration Submitted Successfully!");
+    navigate('/seller-dashboard');
   };
 
   return (
@@ -63,7 +66,7 @@ export default function SellerLanding() {
             </Link>
           </header>
 
-          {/* Huge Desktop Rectangular Banner (Fills the initial screen) */}
+          {/* Huge Desktop Rectangular Banner */}
           <section className="hero panel" style={{ 
             flex: 1,
             width: '100%', 
@@ -91,7 +94,7 @@ export default function SellerLanding() {
                 Reach thousands of active local shoppers, manage your inventory effortlessly, and receive instant secure payouts.
               </p>
 
-              {/* Action Buttons trigger smooth scrolling to off-screen panels */}
+              {/* Action Buttons */}
               <div className="hero-actions" style={{ display: 'flex', gap: '20px', marginTop: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <button className="btn btn-solid" onClick={scrollToLogin} style={{ padding: '16px 36px', fontSize: '16px', fontWeight: '600' }}>
                   Existing User Login
@@ -121,7 +124,7 @@ export default function SellerLanding() {
         </div>
 
 
-        {/* BELOW THE FOLD: Form Sections (Hidden until scrolled down) */}
+        {/* BELOW THE FOLD: Form Sections */}
         
         {/* 1. Existing Seller Login Panel */}
         <div style={{ display: 'flex', justifyContent: 'center', width: '100%', paddingTop: '40px' }}>
@@ -161,7 +164,7 @@ export default function SellerLanding() {
               </div>
 
               <button type="submit" className="btn btn-solid" style={{ width: '100%', marginTop: '10px', padding: '14px', fontSize: '16px' }}>
-                Sign In to Portal
+                Sign In to Portal (Go to Dashboard)
               </button>
             </form>
           </section>
@@ -256,7 +259,7 @@ export default function SellerLanding() {
               </div>
 
               <button type="submit" className="btn btn-solid" style={{ width: '100%', marginTop: '10px', padding: '14px', fontSize: '16px' }}>
-                Complete Registration
+                Complete Registration & Launch Dashboard
               </button>
             </form>
           </section>

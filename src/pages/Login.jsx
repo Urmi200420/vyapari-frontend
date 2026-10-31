@@ -49,8 +49,10 @@ export default function Login() {
       });
       if (!res.ok) throw new Error((await res.text()) || "Something went wrong");
       const data = await res.json().catch(() => ({}));
-      localStorage.setItem("vyapari_role", data.role || staffRole || role);
-      navigate("/"); // later: send admin to /admin and delivery to /delivery
+      const who = data.role || staffRole || role;
+      localStorage.setItem("vyapari_role", who);
+      // sellers go to their dashboard; later: admin to /admin and delivery to /delivery
+      navigate(who === "seller" ? "/seller/dashboard" : "/");
     } catch (err) {
       setError(err.message || "Could not reach the server");
     } finally {

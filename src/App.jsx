@@ -4,13 +4,13 @@ import Intro from "./components/Intro.jsx";
 import GlassDefs from "./components/GlassDefs.jsx";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
+import SellerDashboard from "./pages/SellerDashboard.jsx";
 import SellerLanding from "./pages/SellerLanding.jsx";
 import { startSmoothScroll, scrollToTop } from "./smoothScroll.js";
 
 export default function App() {
   const { pathname } = useLocation();
 
-  // Intro plays once per browser session
   const [introDone, setIntroDone] = useState(() => {
     try {
       return sessionStorage.getItem("vyapari_intro") === "1";
@@ -28,10 +28,7 @@ export default function App() {
     setIntroDone(true);
   };
 
-  // smooth scrolling for the whole app
   useEffect(() => startSmoothScroll(), []);
-
-  // every new page starts at the top
   useEffect(() => scrollToTop(), [pathname]);
 
   return (
@@ -43,6 +40,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/seller/dashboard" element={<SellerDashboard />} />
+          <Route path="/seller-dashboard" element={<SellerDashboard />} />
           <Route path="/seller" element={<SellerLanding />} />
         </Routes>
       )}

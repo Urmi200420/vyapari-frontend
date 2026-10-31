@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { categories } from "../data.js";
 import GlassButton from "./GlassButton.jsx";
+import { USE_MOCK } from "../api";
 
 export default function Sidebar({ active, onSelect, counts, open, onClose, onCross }) {
   const navigate = useNavigate();
@@ -44,6 +45,8 @@ export default function Sidebar({ active, onSelect, counts, open, onClose, onCro
           <div className="staff-links">
             <GlassButton onClick={() => goTo("/login?role=admin")}>🛡️ Admin</GlassButton>
             <GlassButton onClick={() => goTo("/login?role=delivery")}>🛵 Delivery</GlassButton>
+            {/* demo shortcut: only shown while the dashboard uses fake data */}
+            {USE_MOCK && <GlassButton onClick={() => goTo("/seller/dashboard")}>🏪 Seller (demo)</GlassButton>}
           </div>
         </div>
 
