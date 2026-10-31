@@ -6,13 +6,22 @@ export const CATS = categories.filter((c) => c.id !== "all");
 
 /*
   The product form, used for both "Add product" and "Edit product".
-  initial: the product being edited (leave out for a new one)
-  onSubmit(fields, imageFile) must return a promise; throw an Error to show a message.
+  Price Form Fields:
+  - MRP / Original Price: The theoretical maximum price of the item.
+  - Selling Price: The actual price the buyer pays at checkout.
+  - Discount calculation: ((MRP - Selling Price) / MRP) * 100
 */
 export default function ItemForm({ initial, onSubmit, submitLabel, busyLabel, keepAfterSave }) {
-  const blank = { name: "", description: "", category: CATS[0].id, price: "", stock: "" };
+  const blank = { name: "", description: "", category: CATS[0].id, mrp: "", price: "", stock: "" };
   const start = initial
-    ? { name: initial.name, description: initial.description || "", category: initial.category, price: initial.price, stock: initial.stock }
+    ? {
+        name: initial.name,
+        description: initial.description || "",
+        category: initial.category,
+        mrp: initial.mrp !== undefined ? initial.mrp : Math.round(initial.price * 1.35),
+        price: initial.price,
+        stock: initial.stock,
+      }
     : blank;
 
   const [form, setForm] = useState(start);
@@ -23,10 +32,17 @@ export default function ItemForm({ initial, onSubmit, submitLabel, busyLabel, ke
   const [msg, setMsg] = useState({ type: "", text: "" });
   const input = useRef(null);
 
+  const numMrp = Number(form.mrp);
+  const numPrice = Number(form.price);
+  const discount =
+    numMrp > numPrice && numPrice > 0 ? Math.round(((numMrp - numPrice) / numMrp) * 100) : 0;
+
   const pickFile = (f) => {
     if (!f) return;
-    if (!f.type.startsWith("image/")) return setMsg({ type: "error", text: "Please choose a picture (JPG, PNG or WebP)." });
-    if (f.size > 5 * 1024 * 1024) return setMsg({ type: "error", text: "That picture is over 5 MB. Choose a smaller one." });
+    if (!f.type.startsWith("image/"))
+      return setMsg({ type: "error", text: "Please choose a picture (JPG, PNG or WebP)." });
+    if (f.size > 5 * 1024 * 1024)
+      return setMsg({ type: "error", text: "That picture is over 5 MB. Choose a smaller one." });
     setMsg({ type: "", text: "" });
     setFile(f);
     setPreview(URL.createObjectURL(f));
@@ -35,21 +51,39 @@ export default function ItemForm({ initial, onSubmit, submitLabel, busyLabel, ke
   const submit = async (e) => {
     e.preventDefault();
     setMsg({ type: "", text: "" });
-    if (Number(form.price) <= 0) return setMsg({ type: "error", text: "Price must be more than 0." });
-    if (Number(form.stock) < 0 || !Number.isInteger(Number(form.stock))) return setMsg({ type: "error", text: "Stock must be a whole number." });
+
+    const p = Number(form.price);
+    const m = Number(form.mrp);
+    const s = Number(form.stock);
+
+    if (p <= 0) return setMsg({ type: "error", text: "Selling price must be more than ₹0." });
+    if (m > 0 && p > m) {
+      return setMsg({ type: "error", text: "Selling price cannot exceed the Maximum Retail Price (MRP)." });
+    }
+    if (s < 0 || !Number.isInteger(s)) {
+      return setMsg({ type: "error", text: "Stock must be a whole non-negative number." });
+    }
+
     setBusy(true);
     try {
-      const done = await onSubmit({ ...form, name: form.name.trim(), description: form.description.trim() }, file);
+      const payload = {
+        ...form,
+        name: form.name.trim(),
+        description: form.description.trim(),
+        mrp: m > 0 ? m : Math.round(p * 1.35),
+        price: p,
+        stock: s,
+      };
+      const done = await onSubmit(payload, file);
       if (keepAfterSave) {
-        // "add" form: clear it for the next product
         setForm(blank);
         setFile(null);
         setPreview("");
         if (input.current) input.current.value = "";
-        setMsg({ type: "ok", text: done || "Saved." });
+        setMsg({ type: "ok", text: done || "Saved successfully." });
       }
     } catch (err) {
-      setMsg({ type: "error", text: err.message || "Could not save" });
+      setMsg({ type: "error", text: err.message || "Could not save product." });
     } finally {
       setBusy(false);
     }
@@ -59,35 +93,100 @@ export default function ItemForm({ initial, onSubmit, submitLabel, busyLabel, ke
     <form onSubmit={submit} className="add-form">
       <label className="field">
         Product title
-        <input required maxLength={80} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Organic honey 500 g" />
+        <input
+          required
+          maxLength={80}
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          placeholder="e.g. Organic Pure Honey 500g"
+        />
       </label>
 
       <label className="field">
         Description
-        <textarea rows="3" maxLength={500} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What should buyers know?" />
+        <textarea
+          rows="3"
+          maxLength={500}
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+          placeholder="What should buyers know about this product?"
+        />
       </label>
 
+      {/* MRP & Selling Price (checkpoint for pricing controls) */}
       <div className="two-fields">
         <label className="field">
-          Price (₹)
-          <input required type="number" min="1" step="any" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="250" />
+          MRP / Original Price (₹)
+          <input
+            required
+            type="number"
+            min="1"
+            step="any"
+            value={form.mrp}
+            onChange={(e) => setForm({ ...form, mrp: e.target.value })}
+            placeholder="1499"
+          />
+          <span className="field-hint">Maximum Retail Price</span>
         </label>
+
         <label className="field">
-          Stock units
-          <input required type="number" min="0" step="1" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} placeholder="50" />
+          Selling Price (₹)
+          <input
+            required
+            type="number"
+            min="1"
+            step="any"
+            value={form.price}
+            onChange={(e) => setForm({ ...form, price: e.target.value })}
+            placeholder="999"
+          />
+          <span className="field-hint">Buyer pays this at checkout</span>
         </label>
       </div>
 
-      <label className="field">
-        Category
-        <select className="select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-          {CATS.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.icon} {c.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      {/* Live price & discount calculation preview */}
+      {numPrice > 0 && (
+        <div className="price-preview-box">
+          <span className="preview-label">Live Catalog Display:</span>
+          <div className="price-display-sample">
+            <span className="sp-bold">₹{numPrice.toLocaleString("en-IN")}</span>
+            {numMrp > numPrice && (
+              <>
+                <del className="mrp-strike">₹{numMrp.toLocaleString("en-IN")}</del>
+                <span className="discount-tag">({discount}% OFF)</span>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="two-fields">
+        <label className="field">
+          Stock units
+          <input
+            required
+            type="number"
+            min="0"
+            step="1"
+            value={form.stock}
+            onChange={(e) => setForm({ ...form, stock: e.target.value })}
+            placeholder="50"
+          />
+          <span className="field-hint">&lt; 5 units will flag low stock</span>
+        </label>
+
+        <label className="field">
+          Category
+          <select className="select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+            {CATS.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.icon} {c.label}
+              </option>
+            ))}
+          </select>
+          <span className="field-hint">Department</span>
+        </label>
+      </div>
 
       <div className="field">
         Product picture

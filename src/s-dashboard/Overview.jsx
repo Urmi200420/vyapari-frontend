@@ -2,7 +2,7 @@ import { useState } from "react";
 import { getStats, getItems } from "../api";
 import { categories, formatPrice } from "../data.js";
 import GlassButton from "../components/GlassButton.jsx";
-import { LineChart, ColumnChart, HBars } from "./charts.jsx";
+import { LineChart, ColumnChart, HBars, SalesGraph } from "./charts.jsx";
 import { useAsync, Loading, ErrorNote, isLow, LOW_STOCK_BELOW } from "./parts.jsx";
 
 const catLabel = (id) => categories.find((c) => c.id === id)?.label || id;
@@ -37,17 +37,30 @@ export default function Overview({ goTo }) {
   const finished = o.delivered + o.returned + o.cancelled + o.rejected;
   const lowItems = items.filter(isLow).sort((a, b) => a.stock - b.stock);
 
+  const commission = now.totals.commission || Math.round(now.totals.revenue * 0.1);
+  const sellerEarnings = now.totals.sellerEarnings || now.totals.revenue - commission;
+
   const cards = [
     {
-      label: "Earnings",
-      value: formatPrice(now.totals.revenue),
-      note: growth === null ? "Total for " + range.note : (growth >= 0 ? "▲ " : "▼ ") + Math.abs(growth).toFixed(1) + "% vs the period before",
+      label: "Net Earnings (Payout)",
+      value: formatPrice(sellerEarnings),
+      note: growth === null ? "90% after platform cut (" + range.note + ")" : (growth >= 0 ? "▲ " : "▼ ") + Math.abs(growth).toFixed(1) + "% vs prev period",
       tone: growth === null ? "" : growth >= 0 ? "up" : "down",
     },
-    { label: "Orders", value: now.totals.orders, note: "Accepted, " + range.note },
-    { label: "Average order", value: formatPrice(now.totals.avgOrder), note: "Per order" },
     {
-      label: "Low stock",
+      label: "Gross Sales",
+      value: formatPrice(now.totals.revenue),
+      note: "Total customer order volume",
+    },
+    {
+      label: "Admin Commission",
+      value: formatPrice(commission),
+      note: "10% platform marketplace fee",
+      tone: "down",
+    },
+    { label: "Orders Count", value: now.totals.orders, note: "Accepted, " + range.note },
+    {
+      label: "Low Stock Alert",
       value: lowItems.length,
       note: lowItems.length ? "Products with fewer than " + LOW_STOCK_BELOW + " left" : "All products well stocked",
       tone: lowItems.length ? "down" : "up",
@@ -104,12 +117,15 @@ export default function Overview({ goTo }) {
         </section>
       )}
 
-      <section className="panel">
-        <h2 className="stack-title small">
-          <em>Store performance</em>
-          <strong>Earnings per day</strong>
-        </h2>
-        <LineChart data={now.daily.map((d) => ({ label: dayLabel(d.date), value: d.revenue }))} />
+      <section className="panel sales-graph-panel">
+        <div className="dash-row between">
+          <h2 className="stack-title small">
+            <em>Revenue &amp; Performance Trends</em>
+            <strong>Store Sales Graph</strong>
+          </h2>
+          <span className="pill">{range.label} ({now.daily.length} days plotted)</span>
+        </div>
+        <SalesGraph daily={now.daily} days={days} />
       </section>
 
       <div className="two-col">

@@ -44,7 +44,7 @@ export default function Sidebar({ active, onSelect, counts, open, onClose, onCro
           <p className="side-label">Staff access</p>
           <div className="staff-links">
             <GlassButton onClick={() => goTo("/login?role=admin")}>🛡️ Admin</GlassButton>
-            <GlassButton onClick={() => goTo("/login?role=delivery")}>🛵 Delivery</GlassButton>
+            <GlassButton onClick={() => goTo(USE_MOCK ? "/delivery/dashboard" : "/login?role=delivery")}>🛵 Delivery</GlassButton>
             {/* demo shortcut: only shown while the dashboard uses fake data */}
             {USE_MOCK && <GlassButton onClick={() => goTo("/seller/dashboard")}>🏪 Seller (demo)</GlassButton>}
           </div>

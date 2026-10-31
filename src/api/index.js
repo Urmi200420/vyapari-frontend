@@ -35,3 +35,15 @@ export const getWallet = impl.getWallet; //               -> Wallet
 export const requestWithdrawal = impl.requestWithdrawal; // ({ amount, payTo })
 // support
 export const sendTicket = impl.sendTicket; //             (subject, message)
+
+// delivery personnel
+export const getDeliveryProfile = impl.getDeliveryProfile;
+export const saveDeliveryProfile = impl.saveDeliveryProfile;
+export const toggleDutyStatus = impl.toggleDutyStatus;
+export const getDeliveryShipments = impl.getDeliveryShipments;
+export const claimShipment = impl.claimShipment;
+export const rejectShipment = impl.rejectShipment;
+export const startDeliveryRun = impl.startDeliveryRun;
+export const verifyDeliveryOtp = impl.verifyDeliveryOtp;
+export const getDeliveryWallet = impl.getDeliveryWallet;
+export const requestDeliveryWithdrawal = impl.requestDeliveryWithdrawal;

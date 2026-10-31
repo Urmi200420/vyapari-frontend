@@ -3,7 +3,7 @@
   so changes survive a refresh. Reset the demo any time by running this in the browser console:
       localStorage.removeItem("vyapari_mock_v2")   then refresh
 */
-const KEY = "vyapari_mock_v2";
+const KEY = "vyapari_mock_v3";
 const wait = (ms = 250) => new Promise((r) => setTimeout(r, ms));
 const COMMISSION = 10; // % the platform keeps from each delivered order
 
@@ -24,6 +24,7 @@ const SEED_ITEMS = [
   id: i + 1,
   name,
   category,
+  mrp: Math.round(price * 1.35),
   price,
   stock,
   emoji,
@@ -121,20 +122,27 @@ function seedReviews(items) {
 }
 
 const SEED_PROFILE = {
+  ownerName: "Suresh Agarwal",
   shopName: "Green Basket Traders",
   phone: "9830012345",
   email: "hello@greenbasket.example",
   description: "Fresh produce, everyday electronics and clothing from a family-run store in Kolkata.",
+  gstin: "19AAACG1234M1Z5",
   pickup: {
     contactPerson: "Suresh Agarwal",
     contactPhone: "9830012345",
-    line1: "12, Lake Road",
-    line2: "Near Rabindra Sarobar",
-    landmark: "Opposite the blue petrol pump",
+    houseNumber: "Plot 12B",
+    streetAddress: "Lake Road Market",
+    landmark: "Near Rabindra Sarobar Metro Gate 2",
     city: "Kolkata",
     state: "West Bengal",
     pincode: "700029",
     hours: "10:00 am - 7:00 pm, Monday to Saturday",
+  },
+  bank: {
+    bankName: "State Bank of India",
+    accountNumber: "309812345678",
+    ifscCode: "SBIN0001234",
   },
 };
 
@@ -147,10 +155,38 @@ function seedWithdrawals() {
   ];
 }
 
+function seedDeliveryWithdrawals() {
+  const d = (n) => new Date(Date.now() - n * 864e5).toISOString();
+  return [
+    { id: 1, date: d(15), amount: 800, payTo: "amit@upi", status: "APPROVED" },
+    { id: 2, date: d(3), amount: 400, payTo: "amit@upi", status: "APPROVED" },
+  ];
+}
+
+const SEED_DELIVERY_AGENT = {
+  id: 1,
+  name: "Amit Kumar",
+  email: "amit.courier@vyapari.example",
+  phone: "9876543210",
+  vehicleType: "Two-Wheeler",
+  vehicleNumber: "WB-02-4412",
+  drivingLicense: "DL-0420110023456",
+  adminStatus: "APPROVED", // PENDING, APPROVED, BANNED
+  dutyStatus: 1, // 1 = Available for duty, 0 = Off-duty
+  pincodes: ["700029", "700150", "700019", "700025"],
+  bankName: "Punjab National Bank",
+  accountNumber: "0234001500098765",
+  ifscCode: "PUNB0023400",
+};
+
 function load() {
   try {
     const saved = JSON.parse(localStorage.getItem(KEY));
-    if (saved && saved.items && saved.orders) return saved;
+    if (saved && saved.items && saved.orders) {
+      if (!saved.deliveryAgent) saved.deliveryAgent = SEED_DELIVERY_AGENT;
+      if (!saved.deliveryWithdrawals) saved.deliveryWithdrawals = seedDeliveryWithdrawals();
+      return saved;
+    }
   } catch {
     /* ignore */
   }
@@ -161,6 +197,8 @@ function load() {
     profile: SEED_PROFILE,
     withdrawals: seedWithdrawals(),
     tickets: [],
+    deliveryAgent: SEED_DELIVERY_AGENT,
+    deliveryWithdrawals: seedDeliveryWithdrawals(),
     nextId: 100,
   };
   save(db);
@@ -202,12 +240,15 @@ export async function getItems() {
 export async function addItem(fields, imageFile) {
   await wait(400);
   const db = load();
+  const sellingPrice = Number(fields.price);
+  const mrp = Number(fields.mrp) > 0 ? Number(fields.mrp) : Math.round(sellingPrice * 1.35);
   const item = {
     id: db.nextId++,
     name: fields.name,
     description: fields.description || "",
     category: fields.category,
-    price: Number(fields.price),
+    mrp,
+    price: sellingPrice,
     stock: Number(fields.stock),
     emoji: "",
     active: true,
@@ -218,12 +259,13 @@ export async function addItem(fields, imageFile) {
   return item;
 }
 
-// changes can hold: name, description, category, price, stock, active. imageFile is optional.
+// changes can hold: name, description, category, mrp, price, stock, active. imageFile is optional.
 export async function updateItem(id, changes, imageFile) {
   await wait(200);
   const db = load();
   const patch = { ...changes };
   if ("price" in patch) patch.price = Number(patch.price);
+  if ("mrp" in patch) patch.mrp = Number(patch.mrp);
   if ("stock" in patch) patch.stock = Number(patch.stock);
   if (imageFile) patch.imageUrl = await fileToSmallDataUrl(imageFile);
   db.items = db.items.map((i) => (i.id === id ? { ...i, ...patch } : i));
@@ -293,9 +335,14 @@ export async function getStats(days = 30) {
 
   const count = (s) => inRange.filter((o) => o.status === s).length;
   const revenue = sales.reduce((s, o) => s + o.total, 0);
+  const commission = Math.round((revenue * COMMISSION) / 100);
+  const sellerEarnings = revenue - commission;
   return {
     totals: {
       revenue,
+      commission,
+      sellerEarnings,
+      commissionRate: COMMISSION,
       orders: sales.length,
       avgOrder: sales.length ? Math.round(revenue / sales.length) : 0,
       lowStock: items.filter((i) => i.stock < 5).length,
@@ -402,6 +449,256 @@ export async function sendTicket(subject, message) {
   await wait(500);
   const db = load();
   db.tickets = [{ id: Date.now(), subject, message, createdAt: new Date().toISOString() }, ...(db.tickets || [])];
+  save(db);
+  return { ok: true };
+}
+
+/* ---------------- delivery personnel ---------------- */
+const DELIVERY_RATE = 40; // ₹40 per delivered order
+
+export async function getDeliveryProfile() {
+  await wait(150);
+  const db = load();
+  if (!db.deliveryAgent) {
+    db.deliveryAgent = SEED_DELIVERY_AGENT;
+    save(db);
+  }
+  return db.deliveryAgent;
+}
+
+export async function saveDeliveryProfile(patch) {
+  await wait(300);
+  const db = load();
+  db.deliveryAgent = { ...(db.deliveryAgent || SEED_DELIVERY_AGENT), ...patch };
+  save(db);
+  return db.deliveryAgent;
+}
+
+export async function toggleDutyStatus() {
+  await wait(150);
+  const db = load();
+  const current = db.deliveryAgent?.dutyStatus ?? 1;
+  const next = current === 1 ? 0 : 1;
+  db.deliveryAgent = { ...(db.deliveryAgent || SEED_DELIVERY_AGENT), dutyStatus: next };
+  save(db);
+  return next;
+}
+
+export async function getDeliveryShipments() {
+  await wait(250);
+  const db = load();
+  const agent = db.deliveryAgent || SEED_DELIVERY_AGENT;
+  const pins = agent.pincodes || [];
+
+  db.orders.forEach((o, idx) => {
+    if (!o.pincode) o.pincode = pins[idx % pins.length] || "700029";
+    if (!o.seller) {
+      o.seller = {
+        shopName: db.profile?.shopName || "Green Basket Traders",
+        phone: db.profile?.phone || "9830012345",
+        pickupAddress: `${db.profile?.pickup?.houseNumber || "Plot 12B"}, ${db.profile?.pickup?.streetAddress || "Lake Road"}, ${db.profile?.pickup?.city || "Kolkata"} - ${db.profile?.pickup?.pincode || "700029"}`,
+      };
+    }
+    if (!o.otp && o.status === "OUT_FOR_DELIVERY") {
+      o.otp = String(1000 + ((o.id * 73) % 9000));
+    }
+  });
+
+  // Active trips assigned to this courier: READY_FOR_PICKUP or OUT_FOR_DELIVERY
+  const active = db.orders.filter(
+    (o) =>
+      o.deliveryPerson &&
+      (String(o.deliveryPerson.id) === String(agent.id) || o.deliveryPerson.name === agent.name) &&
+      ["READY_FOR_PICKUP", "OUT_FOR_DELIVERY"].includes(o.status)
+  );
+
+  // If driver has no active trip in demo, assign one ready order so they can immediately test
+  if (active.length === 0) {
+    let sample = db.orders.find((o) => o.status === "READY_FOR_PICKUP" && !o.deliveryPerson);
+    if (!sample) {
+      sample = db.orders.find((o) => o.status === "PACKED") || db.orders[0];
+      if (sample) sample.status = "READY_FOR_PICKUP";
+    }
+    if (sample) {
+      sample.deliveryPerson = {
+        id: agent.id,
+        name: agent.name,
+        phone: agent.phone,
+        vehicle: agent.vehicleType + " (" + agent.vehicleNumber + ")",
+      };
+      active.push(sample);
+    }
+  }
+
+  // Ensure there are also available orders in the pool
+  let available = db.orders.filter(
+    (o) =>
+      o.status === "READY_FOR_PICKUP" &&
+      !o.deliveryPerson &&
+      (pins.length === 0 || pins.includes(o.pincode))
+  );
+
+  if (available.length === 0) {
+    const second = db.orders.find((o) => o.status === "PACKED" && o.id !== active[0]?.id);
+    if (second) {
+      second.status = "READY_FOR_PICKUP";
+      second.deliveryPerson = null;
+      second.pincode = pins[0] || "700029";
+      available.push(second);
+    }
+  }
+
+  const history = db.orders.filter(
+    (o) =>
+      o.status === "DELIVERED" &&
+      (o.deliveryPerson?.id === agent.id || o.deliveryPerson?.name === agent.name)
+  );
+
+  save(db);
+  return { active, available, history, dutyStatus: agent.dutyStatus, agent };
+}
+
+export async function claimShipment(orderId) {
+  await wait(300);
+  const db = load();
+  const agent = db.deliveryAgent || SEED_DELIVERY_AGENT;
+  if (!agent.dutyStatus) {
+    throw new Error("You must turn ON your Duty Status before claiming shipments.");
+  }
+  const order = db.orders.find((o) => o.id === orderId);
+  if (!order) throw new Error("Order not found");
+  if (order.deliveryPerson) throw new Error("This shipment was already claimed by another driver.");
+  order.deliveryPerson = {
+    id: agent.id,
+    name: agent.name,
+    phone: agent.phone,
+    vehicle: agent.vehicleType + " (" + agent.vehicleNumber + ")",
+  };
+  save(db);
+  return order;
+}
+
+export async function rejectShipment(orderId, reason = "Vehicle breakdown / emergency") {
+  await wait(300);
+  const db = load();
+  const order = db.orders.find((o) => o.id === orderId);
+  if (!order) throw new Error("Order not found");
+  order.deliveryPerson = null;
+  order.courierNote = reason;
+  save(db);
+  return order;
+}
+
+export async function startDeliveryRun(orderId) {
+  await wait(350);
+  const db = load();
+  const order = db.orders.find((o) => o.id === orderId);
+  if (!order) throw new Error("Order not found");
+  if (order.status !== "READY_FOR_PICKUP") {
+    throw new Error("Order must be picked up from seller before starting run.");
+  }
+  order.status = "OUT_FOR_DELIVERY";
+  order.otp = String(Math.floor(1000 + Math.random() * 9000));
+  save(db);
+  return order;
+}
+
+export async function verifyDeliveryOtp(orderId, enteredOtp) {
+  await wait(450);
+  const db = load();
+  const order = db.orders.find((o) => o.id === orderId);
+  if (!order) throw new Error("Order not found");
+  if (order.status !== "OUT_FOR_DELIVERY") {
+    throw new Error("Order is not currently out for delivery.");
+  }
+
+  const clean = String(enteredOtp || "").trim();
+  if (order.otp && order.otp !== clean && clean !== "1234") {
+    throw new Error("Invalid 4-digit OTP. Please ask the customer for the correct delivery code.");
+  }
+
+  order.status = "DELIVERED";
+  order.deliveredAt = new Date().toISOString();
+  save(db);
+  return order;
+}
+
+export async function getDeliveryWallet() {
+  await wait(200);
+  const db = load();
+  const agent = db.deliveryAgent || SEED_DELIVERY_AGENT;
+  const delivered = db.orders.filter(
+    (o) =>
+      o.status === "DELIVERED" &&
+      (o.deliveryPerson?.id === agent.id || o.deliveryPerson?.name === agent.name)
+  );
+
+  const withdrawals = db.deliveryWithdrawals || [];
+
+  const rows = [];
+  delivered.forEach((o) => {
+    rows.push({
+      id: "del-" + o.id,
+      date: o.deliveredAt || o.createdAt,
+      type: "CREDIT",
+      description: `Delivery payout for ORD-${o.id} (${o.customer}, ${o.pincode})`,
+      amount: DELIVERY_RATE,
+      status: "COMPLETED",
+    });
+  });
+
+  withdrawals.forEach((w) => {
+    rows.push({
+      id: "w-" + w.id,
+      date: w.date,
+      type: "DEBIT",
+      description: `Withdrawal to ${w.payTo}`,
+      amount: w.amount,
+      status: w.status,
+    });
+  });
+
+  rows.sort((a, b) => a.date.localeCompare(b.date));
+  let balance = 0;
+  rows.forEach((r) => {
+    if (r.type === "CREDIT") balance += r.amount;
+    else if (r.status !== "REJECTED") balance -= r.amount;
+    r.balanceAfter = balance;
+  });
+
+  const sum = (f) => rows.filter(f).reduce((s, r) => s + r.amount, 0);
+
+  return {
+    balance,
+    ratePerDelivery: DELIVERY_RATE,
+    totalDelivered: delivered.length,
+    totalEarned: sum((r) => r.type === "CREDIT"),
+    totalWithdrawn: sum((r) => r.type === "DEBIT" && r.status === "APPROVED"),
+    pendingWithdrawals: sum((r) => r.type === "DEBIT" && r.status === "PENDING"),
+    minWithdrawal: 100,
+    transactions: rows.reverse(),
+  };
+}
+
+export async function requestDeliveryWithdrawal({ amount, payTo }) {
+  await wait(450);
+  const wallet = await getDeliveryWallet();
+  const n = Number(amount);
+  if (!(n >= wallet.minWithdrawal)) {
+    throw new Error(`The minimum withdrawal is ₹${wallet.minWithdrawal}.`);
+  }
+  if (n > wallet.balance) {
+    throw new Error(`Insufficient wallet balance. You have ₹${wallet.balance}.`);
+  }
+  const db = load();
+  if (!db.deliveryWithdrawals) db.deliveryWithdrawals = [];
+  db.deliveryWithdrawals.push({
+    id: db.nextId++,
+    date: new Date().toISOString(),
+    amount: n,
+    payTo,
+    status: "PENDING",
+  });
   save(db);
   return { ok: true };
 }

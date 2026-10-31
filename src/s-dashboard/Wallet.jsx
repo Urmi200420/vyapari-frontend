@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { getWallet, requestWithdrawal } from "../api";
+import { useState, useEffect } from "react";
+import { getWallet, requestWithdrawal, getProfile } from "../api";
 import { formatPrice } from "../data.js";
 import GlassButton from "../components/GlassButton.jsx";
 import { useAsync, Loading, ErrorNote, fmtDate, fmtTime } from "./parts.jsx";
@@ -14,12 +14,19 @@ const TXN_BADGE = {
 
 export default function Wallet() {
   const { data, error, loading, reload } = useAsync(getWallet);
+  const { data: profile } = useAsync(getProfile);
   const [amount, setAmount] = useState("");
   const [payTo, setPayTo] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState({ type: "", text: "" });
   const [filter, setFilter] = useState("all");
   const [shown, setShown] = useState(PAGE);
+
+  useEffect(() => {
+    if (!payTo && profile?.bank?.accountNumber) {
+      setPayTo(profile.bank.bankName + " (A/C: " + profile.bank.accountNumber + ", IFSC: " + profile.bank.ifscCode + ")");
+    }
+  }, [profile, payTo]);
 
   if (error && !data) return <ErrorNote error={error} onRetry={reload} />;
   if (!data) return <Loading text="Loading your wallet..." />;
@@ -91,6 +98,20 @@ export default function Wallet() {
             <label className="field">
               Send money to (UPI ID or bank account)
               <input required maxLength={80} value={payTo} onChange={(e) => setPayTo(e.target.value)} placeholder="e.g. yourshop@upi" />
+              {profile?.bank?.accountNumber && (
+                <button
+                  type="button"
+                  className="link-btn"
+                  style={{ alignSelf: "flex-start", marginTop: "0.25rem", fontSize: "0.75rem" }}
+                  onClick={() =>
+                    setPayTo(
+                      profile.bank.bankName + " (A/C: " + profile.bank.accountNumber + ", IFSC: " + profile.bank.ifscCode + ")"
+                    )
+                  }
+                >
+                  Use registered bank: {profile.bank.bankName} (..{profile.bank.accountNumber.slice(-4)})
+                </button>
+              )}
             </label>
             {msg.text && <p className={"form-msg " + msg.type}>{msg.text}</p>}
             <GlassButton type="submit" variant="solid" block disabled={busy || data.balance < data.minWithdrawal}>

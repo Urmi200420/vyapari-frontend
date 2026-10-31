@@ -1059,3 +1059,176 @@
 .passbook td:first-child {
   white-space: nowrap;
 }
+
+/* ---------- Pricing controls & Discount tags ---------- */
+.item-price-block {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.2rem 0;
+}
+.item-mrp {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+.discount-tag {
+  display: inline-flex;
+  align-items: center;
+  background: #22c55e;
+  color: #052e16;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.12rem 0.45rem;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+/* ItemForm Price preview box */
+.price-preview-box {
+  background: var(--panel-2);
+  border: 1px dashed var(--cream-a45);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.price-preview-box .preview-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.price-display-sample {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.price-display-sample .sp-bold {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--cream);
+}
+.price-display-sample .mrp-strike {
+  font-size: 0.95rem;
+  color: var(--muted);
+  text-decoration: line-through;
+  opacity: 0.8;
+}
+.field-hint {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 0.15rem;
+  display: block;
+}
+
+/* Invoice enhancements */
+.inv-item-cat {
+  font-size: 0.8rem;
+  color: #555;
+  font-weight: normal;
+}
+.muted-txt {
+  color: #777;
+  text-decoration: line-through;
+}
+.font-bold {
+  font-weight: 700;
+}
+.text-green {
+  color: #166534;
+  font-weight: 700;
+}
+.inv-table tfoot .discount-row td {
+  color: #166534;
+  background: #f0fdf4;
+}
+.inv-footer {
+  margin-top: 1.5rem;
+  border-top: 1px dashed #cbd5e1;
+  padding-top: 0.8rem;
+}
+
+/* ---------- Sales Graph Enhancements ---------- */
+.sales-graph-panel {
+  position: relative;
+}
+.sales-graph-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  margin-top: 0.8rem;
+}
+.sales-graph-controls {
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+.sales-graph-snapshot {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.8rem;
+}
+.snapshot-box {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.65rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.snapshot-box .snap-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.snapshot-box .snap-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--cream);
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+.snapshot-box .snap-sub {
+  font-size: 0.72rem;
+  color: var(--blush);
+}
+.sales-tooltip {
+  min-width: 170px;
+  background: rgba(15, 42, 29, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--cream-a45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  padding: 0.6rem 0.85rem;
+}
+.sales-tooltip .tooltip-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.3rem;
+  margin-bottom: 0.35rem;
+  gap: 0.6rem;
+}
+.sales-tooltip .tooltip-head b {
+  color: var(--cream);
+  font-size: 0.85rem;
+}
+.sales-tooltip .tooltip-metric-val {
+  color: var(--star);
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+.sales-tooltip .tooltip-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+}

@@ -89,3 +89,14 @@ export const requestWithdrawal = (body) => request("/api/wallet/withdrawals", { 
 // POST /api/tickets   body: { subject, message }
 export const sendTicket = (subject, message) =>
   request("/api/tickets", { method: "POST", body: JSON.stringify({ subject, message }) });
+/* ---------- delivery personnel ---------- */
+export const getDeliveryProfile = () => request("/api/delivery/profile");
+export const saveDeliveryProfile = (data) => request("/api/delivery/profile", { method: "PUT", body: JSON.stringify(data) });
+export const toggleDutyStatus = () => request("/api/delivery/duty", { method: "POST" });
+export const getDeliveryShipments = () => request("/api/delivery/shipments");
+export const claimShipment = (id) => request(`/api/delivery/shipments/${id}/claim`, { method: "POST" });
+export const rejectShipment = (id, reason) => request(`/api/delivery/shipments/${id}/reject`, { method: "POST", body: JSON.stringify({ reason }) });
+export const startDeliveryRun = (id) => request(`/api/delivery/shipments/${id}/start`, { method: "POST" });
+export const verifyDeliveryOtp = (id, otp) => request(`/api/delivery/shipments/${id}/verify-otp`, { method: "POST", body: JSON.stringify({ otp }) });
+export const getDeliveryWallet = () => request("/api/delivery/wallet");
+export const requestDeliveryWithdrawal = (body) => request("/api/delivery/withdrawals", { method: "POST", body: JSON.stringify(body) });

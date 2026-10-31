@@ -138,9 +138,21 @@ export default function Inventory() {
                 <b>{i.name}</b>
                 <span>{CATS.find((c) => c.id === i.category)?.label || i.category}</span>
                 {i.description && <span className="item-desc">{i.description}</span>}
-                <span className="item-price">{formatPrice(i.price)}</span>
+                <div className="item-price-block">
+                  <span className="item-price">{formatPrice(i.price)}</span>
+                  {i.mrp && i.mrp > i.price && (
+                    <>
+                      <del className="item-mrp">{formatPrice(i.mrp)}</del>
+                      <span className="discount-tag">({Math.round(((i.mrp - i.price) / i.mrp) * 100)}% OFF)</span>
+                    </>
+                  )}
+                </div>
                 <div className="badges">
-                  {i.stock === 0 ? <span className="badge st-cancel">Out of stock</span> : isLow(i) && <span className="badge st-cancel">Low stock</span>}
+                  {i.stock === 0 ? (
+                    <span className="badge st-cancel">Out of stock</span>
+                  ) : (
+                    isLow(i) && <span className="badge st-cancel">Low stock (&lt; 5 left)</span>
+                  )}
                   {i.active === false && <span className="badge st-new">Hidden from buyers</span>}
                 </div>
               </div>

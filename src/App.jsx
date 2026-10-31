@@ -6,6 +6,7 @@ import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import SellerDashboard from "./pages/SellerDashboard.jsx";
 import SellerLanding from "./pages/SellerLanding.jsx";
+import DeliveryDashboard from "./pages/DeliveryDashboard.jsx";
 import { startSmoothScroll, scrollToTop } from "./smoothScroll.js";
 
 export default function App() {
@@ -43,6 +44,9 @@ export default function App() {
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
           <Route path="/seller-dashboard" element={<SellerDashboard />} />
           <Route path="/seller" element={<SellerLanding />} />
+          <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
+          <Route path="/delivery-dashboard" element={<DeliveryDashboard />} />
+          <Route path="/delivery" element={<DeliveryDashboard />} />
         </Routes>
       )}
     </>

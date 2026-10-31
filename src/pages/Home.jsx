@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar.jsx";
 import GlassButton from "../components/GlassButton.jsx";
@@ -26,6 +26,25 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false); // phone: sidebar sheet open
   const [collapsed, setCollapsed] = useState(false); // desktop: sidebar hidden with the ✕
+  const [scrolledUp, setScrolledUp] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY || document.documentElement.scrollTop;
+      // When scrolling down past 60px, scroll the search bar up out of view
+      if (y > 60 && y > lastScrollY.current) {
+        setScrolledUp(true);
+      } else if (y < lastScrollY.current || y <= 30) {
+        // When scrolling up or near the top, bring the search bar back down
+        setScrolledUp(false);
+      }
+      lastScrollY.current = y;
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const counts = useMemo(() => {
     const c = { all: products.length };
@@ -78,8 +97,8 @@ export default function Home() {
       />
 
       <main className="main">
-        {/* floating glass top bar */}
-        <header className="topbar glass-panel">
+        {/* floating glass top bar (scrollable up when scrolling down, slides back on scroll up) */}
+        <header className={"topbar glass-panel home-topbar" + (scrolledUp ? " scrolled-up" : "")}>
           <button className="menu-btn glass" onClick={openMenu} aria-label="Open menu">
             ☰
           </button>
@@ -89,6 +108,9 @@ export default function Home() {
             placeholder="Search products, brands and more"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && query.trim()) jumpToShop();
+            }}
           />
           <nav className="top-links">
             <Link to="/seller" className="text-link">
